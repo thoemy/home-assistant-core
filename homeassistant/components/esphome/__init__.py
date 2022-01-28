@@ -19,11 +19,13 @@ from aioesphomeapi import (
     EntityInfo,
     EntityState,
     HomeassistantServiceCall,
+    HomeassistantTrigger,
     InvalidEncryptionKeyAPIError,
     ReconnectLogic,
     RequiresEncryptionAPIError,
     UserService,
     UserServiceArgType,
+    UserTrigger,
 )
 import voluptuous as vol
 
@@ -32,10 +34,12 @@ from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
+    CONF_DEVICE_ID,
     CONF_HOST,
     CONF_MODE,
     CONF_PASSWORD,
     CONF_PORT,
+    CONF_TRIGGER_ID,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, State, callback
@@ -50,12 +54,13 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.template import Template
+from homeassistant.helpers.template import Template, device_id
 
 # Import config flow so that it's added to the registry
 from .entry_data import RuntimeEntryData
 
 DOMAIN = "esphome"
+TRIGGERS = f"{DOMAIN}-triggers"
 CONF_NOISE_PSK = "noise_psk"
 _LOGGER = logging.getLogger(__name__)
 _T = TypeVar("_T")
@@ -207,6 +212,16 @@ async def async_setup_entry(  # noqa: C901
                 )
             )
 
+    @callback
+    def async_on_trigger(trigger: HomeassistantTrigger) -> None:
+        """Trigger device trigger when user trigger in ESPHome config is triggered."""
+        _LOGGER.debug("Got trigger %s from device %s", trigger.trigger, device_id)
+        event_data = {
+            CONF_DEVICE_ID: device_id,
+            CONF_TRIGGER_ID: trigger.trigger,
+        }
+        hass.bus.async_fire("esphome_trigger", event_data)
+
     async def _send_home_assistant_state(
         entity_id: str, attribute: str | None, state: State | None
     ) -> None:
@@ -285,11 +300,13 @@ async def async_setup_entry(  # noqa: C901
             )
             entry_data.async_update_device_state(hass)
 
-            entity_infos, services = await cli.list_entities_services()
+            entity_infos, services, triggers = await cli.list_entities_services()
             await entry_data.async_update_static_infos(hass, entry, entity_infos)
             await _setup_services(hass, entry_data, services)
+            await _setup_triggers(hass, device_id, triggers)
             await cli.subscribe_states(async_on_state)
             await cli.subscribe_service_calls(async_on_service_call)
+            await cli.subscribe_triggers(async_on_trigger)
             await cli.subscribe_home_assistant_states(async_on_state_subscription)
 
             hass.async_create_task(entry_data.async_save_to_store())
@@ -510,6 +527,14 @@ async def _setup_services(
 
     for service in to_register:
         await _register_service(hass, entry_data, service)
+
+
+async def _setup_triggers(
+    hass: HomeAssistant, device_id: str, triggers: list[UserTrigger]
+) -> None:
+    if TRIGGERS not in hass.data:
+        hass.data[TRIGGERS] = {}
+    hass.data[TRIGGERS][device_id] = triggers
 
 
 async def _cleanup_instance(

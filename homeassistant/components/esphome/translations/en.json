@@ -43,5 +43,10 @@
                 "description": "Please enter connection settings of your [ESPHome](https://esphomelib.com/) node."
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "triggered": "`{subtype}` triggered"
+        }
     }
 }
