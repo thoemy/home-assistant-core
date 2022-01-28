@@ -471,6 +471,10 @@ ATTR_DEVICE_CLASS: Final = "device_class"
 # Temperature attribute
 ATTR_TEMPERATURE: Final = "temperature"
 
+# ESPHome Trigger attribute
+ATTR_TRIGGER_ID: Final = "trigger_id"
+CONF_TRIGGER_ID: Final = "trigger_id"
+
 # Persons attribute
 ATTR_PERSONS: Final = "persons"
 

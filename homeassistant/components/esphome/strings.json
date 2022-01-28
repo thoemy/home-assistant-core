@@ -43,5 +43,10 @@
       }
     },
     "flow_title": "{name}"
+  },
+  "device_automation": {
+    "trigger_type": {
+      "triggered": "`{subtype}` triggered"
+    }
   }
 }

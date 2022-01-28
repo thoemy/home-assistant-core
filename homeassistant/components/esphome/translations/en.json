@@ -43,5 +43,10 @@
                 "description": "Please enter connection settings of your [ESPHome]({esphome_url}) node."
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "triggered": "`{subtype}` triggered"
+        }
     }
 }
