@@ -49,5 +49,10 @@
             "description": "To improve Bluetooth reliability and performance, we highly recommend updating {name} with ESPHome 2022.11.0 or later.",
             "title": "Update {name} with ESPHome 2022.11.0 or later"
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "triggered": "`{subtype}` triggered"
+        }
     }
 }

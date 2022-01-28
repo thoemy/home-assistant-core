@@ -13,6 +13,7 @@ from .entry_data import RuntimeEntryData
 
 STORAGE_VERSION = 1
 DOMAIN = "esphome"
+TRIGGERS = f"{DOMAIN}-triggers"
 
 _DomainDataSelfT = TypeVar("_DomainDataSelfT", bound="DomainData")
 
